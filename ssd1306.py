@@ -3,9 +3,9 @@ import random
 from time import sleep
 
 global ser
-ser = serial.Serial('COM3',115200)
+ser = serial.Serial('COM3',115200) # Edit COM number to match your Bus Pirate
 global i2caddr
-i2caddr = bytes('0x78','utf-8')
+i2caddr = bytes('0x78','utf-8') # Make sure this matches the i2c address of your SSD1306
 global col
 global row
 
@@ -53,21 +53,26 @@ alphabet = {
     '?':'0x0 0x6 0x1 0x51 0x9 0x6 0x0',
     '.':'0x0 0x0 0x40 0x0 0x0 0x0 0x0'
 }
+
+# This sends commands to the Bus Pirate
 def buspirate_cmd(cmd):
     bcmd = bytes(cmd,'utf-8')
     ser.write(bcmd+b'\r')
     sleep(0.5)
 
+# This sends commands to your SSD1306
 def ssd1306_cmd(cmd):
     bcmd = bytes(cmd,'utf-8')
     ser.write(b'['+i2caddr+b' 0x00 '+bcmd+b']\r')
     sleep(0.01)
     
+# This sends screen control instructions to your SSD1306
 def ssd1306_ctrl(cmd):
     bcmd = bytes(cmd,'utf-8')
     ser.write(b'['+i2caddr+b' 0x40 '+bcmd+b']\r')
     sleep(0.01)
     
+# This initializes the SSD1306
 def ssd1306_init():
     buspirate_cmd('m') #BP Mode Select
     buspirate_cmd('4') #Select I2C
@@ -100,6 +105,7 @@ def ssd1306_init():
     ssd1306_cmd('0xa6') #Normal display
     ssd1306_cmd('0xaf') #Display on
 
+# This preps the screen by defining the entire screen as the working area.
 def ssd1306_scr_prep():
     ssd1306_cmd('0x21') #Column address
     ssd1306_cmd('0x00') #Start column 0
@@ -108,6 +114,7 @@ def ssd1306_scr_prep():
     ssd1306_cmd('0x00') #Start page 0
     ssd1306_cmd('0x07') #End page 7
 
+#This re-defines the screen area we're interacting with.
 def ssd1306_scr_area(col_start, col_end, page_start, page_end):
     ssd1306_cmd('0x21') #Column address
     ssd1306_cmd(col_start) #Start column 0
@@ -116,6 +123,7 @@ def ssd1306_scr_area(col_start, col_end, page_start, page_end):
     ssd1306_cmd(page_start) #Start page 0
     ssd1306_cmd(page_end) #End page 7
 
+# This makes it easier to dim the screen, send True to dim or False to un-dim
 def ssd1306_dim(tf):
     if(tf):
         contrast = '0x00'
@@ -125,12 +133,14 @@ def ssd1306_dim(tf):
     ssd1306_cmd('0x81')
     ssd1306_cmd(contrast)
 
+# This inverts the screen, like before, True or False.
 def ssd1306_invert(tf):
     if(tf):
         ssd1306_cmd('0xA7')
     else:
         ssd1306_cmd('0xA6')
 
+# This starts scrolling the first row.
 def ssd1306_scrollright():
     ssd1306_cmd('0x26'); #Right horizontal scroll
     ssd1306_cmd('0x00');
@@ -141,6 +151,7 @@ def ssd1306_scrollright():
     ssd1306_cmd('0xff');
     ssd1306_cmd('0x2f'); #Activate scroll
         
+# This sets screen brightness.
 def ssd1306_brightness(value):
     ssd1306_cmd('0x81');
     ssd1306_cmd(value);
@@ -150,6 +161,7 @@ def ssd1306_brightness(value):
 #        ssd1306_ctrl(i)
 #        sleep(0.05)
 
+# This prints text from the alphabet array above.
 def ssd1306_print(string):
     global col
     global row
@@ -163,6 +175,7 @@ def ssd1306_print(string):
         col = col + 1
         sleep(0.05)
 
+# This prints text form the alphabet above and advances to the next line.
 def ssd1306_println(string):
     global col
     global row
@@ -177,7 +190,8 @@ def ssd1306_println(string):
     row = row + 1
     ssd1306_scr_area('0x01','0x7f',hex(row),hex(row))
     col = 0
-            
+
+# Main method, this initializes the screen and fills it.    
 def main():
     ssd1306_init()
     ssd1306_scr_prep()
@@ -186,6 +200,8 @@ def main():
 main()
 sleep(1)
 
+
+# Uncomment this block to fill parts of the screen with random dots.
 #ssd1306_scr_area(31,94,3,4)
 #sleep(1)
 #for i in range(128):
@@ -193,20 +209,20 @@ sleep(1)
 #    ssd1306_ctrl(hex(tmp))
 #sleep(1)
 
-#ssd1306_scr_prep()
+
 ssd1306_ctrl('0x00:1024') #Empty screen
 sleep(1)
-ssd1306_scr_area('0x01','0x7e', '0x00', '0x00')
+#ssd1306_scr_area('0x01','0x7e', '0x00', '0x00')
 col = 0
 row = 0
 sleep(0.5)
 for i in range(1):
-    ssd1306_println('HELLO! ')
-    ssd1306_println('MY NAME IS SSD1306')
-    ssd1306_println('I WOULD LIKE TO BE')
-    ssd1306_println('YOUR FRIEND!')
+    ssd1306_println('HELLO WORLD! ')
+    ssd1306_println('THIS IS SSD1306')
     ssd1306_println('')
-    ssd1306_println('WHAT IS YOUR NAME?')
+    ssd1306_println('BUS PIRATE TEST')
+    ssd1306_println('')
+    ssd1306_println('')
     #ssd1306_println('.')
     #ssd1306_println('.')
 
